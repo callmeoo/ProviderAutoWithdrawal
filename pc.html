@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>专用账号（中间服务商）· 唯普汽车</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+[v-cloak] { display: none; }
+
+/* 顶部子页签 */
+.sub-nav { display: flex; align-items: center; gap: 24px; padding: 10px 0 14px; }
+.sub-nav-item { font-size: 14px; color: #94a3b8; cursor: pointer; padding: 4px 0; }
+.sub-nav-item.active { color: #1f2937; font-weight: 600; }
+.sub-nav-item:hover { color: var(--pc-red); }
+
+/* 三联卡 */
+.card-row { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 16px; margin-bottom: 16px; }
+.balance-card { background: #fff; border: 1px solid var(--pc-border); padding: 18px 22px 16px; min-height: 156px; display: flex; flex-direction: column; }
+.balance-card .label-row { display: flex; align-items: center; gap: 6px; }
+.balance-card .label { font-size: 14px; color: #1f2937; font-weight: 500; }
+.balance-card .help-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--pc-red); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; cursor: pointer; }
+.balance-card .amount { font-size: 30px; font-weight: 700; color: #1f2937; margin-top: 16px; line-height: 1.1; letter-spacing: -.5px; }
+.balance-card .amount .decimal { font-size: 18px; font-weight: 600; }
+.balance-card .frozen { font-size: 12px; color: #94a3b8; margin-top: 10px; }
+.balance-card .actions { margin-top: auto; padding-top: 14px; display: flex; gap: 16px; }
+.balance-card .act-link { color: var(--pc-red); font-size: 13px; cursor: pointer; }
+.balance-card .act-link:hover { text-decoration: underline; }
+.balance-card .act-link.muted { color: #94a3b8; }
+
+.bank-card { background: #fff; border: 1px solid var(--pc-border); padding: 18px 22px 16px; min-height: 156px; display: flex; flex-direction: column; }
+.bank-card .bk-title { font-size: 14px; color: #1f2937; font-weight: 500; }
+.bank-card .bk-tip { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+.bank-card .bk-row { margin-top: auto; padding-top: 14px; display: flex; align-items: center; gap: 12px; border-top: 1px solid #f1f5f9; }
+.bank-card .bk-logo { width: 38px; height: 38px; border-radius: 8px; background: #d4302c; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+.bank-card .bk-name { font-size: 14px; color: #1f2937; font-weight: 500; }
+.bank-card .bk-card-no { font-size: 13px; color: #475569; letter-spacing: 1px; margin-top: 2px; }
+.bank-card .bk-change { margin-left: auto; color: var(--pc-red); font-size: 13px; cursor: pointer; }
+
+/* tab */
+.tab-bar { display: flex; border-bottom: 1px solid var(--pc-border); }
+.tab-bar .tab { padding: 12px 22px; font-size: 14px; color: #64748b; cursor: pointer; position: relative; user-select: none; }
+.tab-bar .tab:hover { color: var(--pc-red); }
+.tab-bar .tab.active { color: var(--pc-red); font-weight: 600; }
+.tab-bar .tab.active::after { content: ''; position: absolute; left: 22px; right: 22px; bottom: -1px; height: 2px; background: var(--pc-red); }
+
+.note-line { padding: 12px 4px 14px; font-size: 12.5px; color: #94a3b8; }
+
+/* 表格 */
+.tx-table { background: #fff; border: 1px solid var(--pc-border); }
+.tx-thead { display: grid; padding: 14px 24px; font-size: 13px; color: #64748b; }
+.tx-row { display: grid; padding: 15px 24px; font-size: 13px; color: #1f2937; border-top: 1px dashed #e5e7eb; align-items: center; }
+.tx-row:hover { background: #fafbfc; }
+.tx-table.log .tx-thead, .tx-table.log .tx-row { grid-template-columns: 1.1fr .85fr .8fr .9fr .9fr 1.5fr; }
+.tx-table.wd .tx-thead, .tx-table.wd .tx-row { grid-template-columns: 1.1fr .85fr .8fr 1fr 2.1fr; }
+.tx-table.frozen .tx-thead, .tx-table.frozen .tx-row { grid-template-columns: 1.3fr 1fr 1fr 1.5fr; }
+.memo { color: #64748b; }
+.link { color: var(--pc-red); cursor: pointer; margin-left: 6px; }
+.link:hover { text-decoration: underline; }
+.st-wait { color: var(--pc-orange); }
+.st-deduct { color: #ef4444; }
+.st-ok { color: #16a34a; }
+.st-frozen { color: #6366f1; }
+.neg { color: #1f2937; }
+.tx-row.hl-row { background: #fffbe6; }
+.tx-row.hl-row:hover { background: #fff7cc; }
+
+/* 分页 */
+.pager { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 0; background: #fff; border-top: 1px solid #f1f5f9; }
+.pager-info { font-size: 12.5px; color: #64748b; margin-right: 6px; }
+.pager-btn { min-width: 30px; height: 30px; padding: 0 9px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.pager-btn:hover:not(:disabled):not(.active) { border-color: var(--pc-red); color: var(--pc-red); }
+.pager-btn.active { background: var(--pc-red); color: #fff; border-color: var(--pc-red); }
+.pager-btn:disabled { color: #cbd5e1; cursor: not-allowed; background: #f8fafc; }
+
+/* 冻结 section */
+.section-block { margin-top: 28px; }
+.section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.section-head .title { font-size: 16px; font-weight: 700; color: #1f2937; }
+.section-head .sub { font-size: 12.5px; color: #94a3b8; }
+
+/* 弹框 */
+.mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; z-index: 9000; }
+.box { background: #fff; width: 440px; max-width: calc(100vw - 32px); border-radius: 10px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+.box .bx-h { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; color: #1f2937; }
+.box .bx-h .ico { width: 30px; height: 30px; border-radius: 50%; background: var(--pc-red-light); color: var(--pc-red); display: flex; align-items: center; justify-content: center; }
+.box .bx-p { font-size: 14px; color: #475569; line-height: 1.8; margin-top: 14px; }
+.box .bx-foot { margin-top: 20px; text-align: right; }
+.box .bx-btn { background: var(--pc-red); color: #fff; border: none; padding: 9px 22px; border-radius: 4px; font-size: 14px; cursor: pointer; }
+.box .bx-btn:hover { background: var(--pc-red-dark); }
+.dt-row { display: flex; justify-content: space-between; font-size: 13px; padding: 9px 2px; border-bottom: 1px dashed #eef0f3; }
+.dt-row .plate { color: #1f2937; }
+.dt-row .amt { color: #475569; font-variant-numeric: tabular-nums; }
+.dt-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; padding: 12px 2px 2px; }
+.dt-total .v { color: var(--pc-red); }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+
+  <!-- header -->
+  <div class="pc-topbar"><div class="topbar-inner">
+    <div><span style="margin-right:6px">cptest01</span><a href="#">退出</a></div>
+    <div>
+      <a href="#">唯普首页</a><span class="sep">|</span>
+      <a href="#">个人中心</a><span class="sep">|</span>
+      <a href="#">移动唯普</a><span class="sep">|</span>
+      <a href="#">商家合作</a><span class="sep">|</span>
+      <a href="#">网站公告</a><span class="sep">|</span>
+      <a href="#" class="danger">联系客服</a>
+    </div>
+  </div></div>
+  <div class="pc-nav"><div class="pc-nav-inner">
+    <a href="#" class="brand"><div class="brand-zh">唯普汽车</div><div class="brand-en">www.chevip.com</div></a>
+    <div class="nav-list">
+      <a class="nav-item">我的首页</a>
+      <a class="nav-item">我的交易 ▾</a>
+      <a class="nav-item active">专用账号</a>
+      <a class="nav-item">我的信息 ▾</a>
+    </div>
+  </div></div>
+
+  <div class="pc-main">
+    <div class="sub-nav">
+      <span class="sub-nav-item active">专用账号</span>
+      <span class="sub-nav-item">我的卡包</span>
+    </div>
+
+    <!-- 三联卡 -->
+    <div class="card-row">
+      <div class="balance-card">
+        <div class="label-row">
+          <span class="label">可用余额（服务费）</span>
+        </div>
+        <div class="amount">{{ formatInt(availableBalance) }}<span class="decimal">.{{ formatDecimal(availableBalance) }}</span></div>
+        <div class="frozen">已冻结 {{ formatCN(frozenBalance) }}</div>
+        <div class="actions">
+          <span class="act-link" @click="showTip = true">提现</span>
+          <span class="act-link muted">充值</span>
+        </div>
+      </div>
+      <div class="balance-card">
+        <div class="label-row"><span class="label">可用保证金</span><span class="help-dot" title="账户可用保证金">!</span></div>
+        <div class="amount">{{ formatInt(availableDeposit) }}<span class="decimal">.{{ formatDecimal(availableDeposit) }}</span></div>
+        <div class="frozen">已冻结 {{ formatCN(frozenDeposit) }}</div>
+        <div class="actions">
+          <span class="act-link muted">提取</span>
+          <span class="act-link muted">充值</span>
+        </div>
+      </div>
+      <div class="bank-card">
+        <div class="bk-title">绑定银行卡</div>
+        <div class="bk-tip">可用余额提现申请通过后打款至此卡</div>
+        <div class="bk-row">
+          <span class="bk-logo">中</span>
+          <div style="flex:1;min-width:0">
+            <div class="bk-name">中信银行</div>
+            <div class="bk-card-no">**** **** **** **** 5445</div>
+          </div>
+          <span class="bk-change">更换</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主 tab -->
+    <div class="tab-bar">
+      <div :class="['tab', logTab==='balance'?'active':'']" @click="logTab='balance'; logPage=1">可用余额</div>
+      <div :class="['tab', logTab==='withdraw'?'active':'']" @click="logTab='withdraw'; logPage=1">提现记录</div>
+      <div :class="['tab', logTab==='deposit'?'active':'']" @click="logTab='deposit'; logPage=1">保证金</div>
+    </div>
+    <div class="note-line">仅支持查询最近一年记录</div>
+
+    <!-- 可用余额 / 保证金 流水 -->
+    <div v-if="logTab!=='withdraw'" class="tx-table log">
+      <div class="tx-thead">
+        <div>时间</div><div>类型</div><div>金额（元）</div><div>状态</div><div>确认时间</div><div>备注</div>
+      </div>
+      <div v-for="(r,i) in pagedLog" :key="'l'+i" class="tx-row" :class="{'hl-row': r.hl}">
+        <div>{{ r.time }}</div>
+        <div>{{ r.type }}</div>
+        <div class="neg">{{ formatAmount(r.amount) }}</div>
+        <div style="color:#64748b">{{ r.status }}</div>
+        <div style="color:#94a3b8">{{ r.confirm || '—' }}</div>
+        <div class="memo">{{ r.note }}</div>
+      </div>
+      <div class="pager">
+        <span class="pager-info">共 {{ currentLog.length }} 条</span>
+        <button class="pager-btn" :disabled="logPage===1" @click="logPage--"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+        <button v-for="p in logPages" :key="'lp'+p" :class="['pager-btn', logPage===p?'active':'']" @click="logPage=p">{{ p }}</button>
+        <button class="pager-btn" :disabled="logPage===logTotal" @click="logPage++"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+
+    <!-- 提现记录 -->
+    <div v-else class="tx-table wd">
+      <div class="tx-thead">
+        <div>提现时间</div><div>提现金额（元）</div><div>状态</div><div>确认日期</div><div>备注（车牌）</div>
+      </div>
+      <div v-for="(r,i) in pagedWd" :key="'w'+i" class="tx-row">
+        <div>{{ r.time }}</div>
+        <div class="neg">{{ formatAmount(r.amount) }}</div>
+        <div style="color:#64748b">{{ r.status }}</div>
+        <div style="color:#94a3b8">{{ r.confirm }}</div>
+        <div class="memo">{{ r.note }}<span class="link" @click="openDetail(r.detail)" v-if="r.detail">查看明细</span></div>
+      </div>
+      <div class="pager">
+        <span class="pager-info">共 {{ withdrawLog.length }} 条</span>
+      </div>
+    </div>
+
+    <!-- 我的冻结 -->
+    <div class="section-block">
+      <div class="section-head"><span class="title">我的冻结</span><span class="sub">（仅显示当前冻结明细）</span></div>
+      <div class="tab-bar">
+        <div :class="['tab', frozenTab==='balance'?'active':'']" @click="frozenTab='balance'">可用余额</div>
+        <div :class="['tab', frozenTab==='deposit'?'active':'']" @click="frozenTab='deposit'">保证金</div>
+      </div>
+      <div class="tx-table frozen" style="border-top:none">
+        <div class="tx-thead"><div>时间</div><div>冻结项目</div><div>金额（元）</div><div>备注</div></div>
+        <div v-for="(r,i) in currentFrozen" :key="'f'+i" class="tx-row">
+          <div>{{ r.time }}</div><div>{{ r.item }}</div><div>{{ formatCN(r.amount) }}</div>
+          <div class="memo">{{ r.note || '—' }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pc-footer"><div class="copyright">© 2026 唯普汽车 www.chevip.com · 中间服务商提现优化原型（演示数据）</div></div>
+
+  <!-- 自动提现提示弹框 -->
+  <div class="mask" v-if="showTip" @click.self="showTip=false">
+    <div class="box">
+      <div class="bx-h"><span class="ico"><i data-lucide="info" class="w-4 h-4"></i></span>服务费由系统自动提现</div>
+      <div class="bx-p">当前账号服务费提现由系统自动发起，无需手动申请。符合提现条件后，系统将按结算规则自动处理；如发生售后退车，将优先抵扣待提现服务费。</div>
+      <div class="bx-foot"><button class="bx-btn" @click="showTip=false">我知道了</button></div>
+    </div>
+  </div>
+
+  <!-- 提现明细弹框 -->
+  <div class="mask" v-if="detail" @click.self="detail=null">
+    <div class="box">
+      <div class="bx-h">提现明细<span style="font-size:13px;color:#94a3b8;font-weight:400;margin-left:6px">{{ detail.sub }}</span></div>
+      <div style="margin-top:14px">
+        <div class="dt-row" v-for="(r,i) in detail.rows" :key="'d'+i"><span class="plate">{{ r[0] }}</span><span class="amt">{{ formatCN(r[1]) }}</span></div>
+        <div class="dt-total"><span>合计</span><span class="v">{{ formatCN(detailTotal) }}</span></div>
+      </div>
+      <div class="bx-foot"><button class="bx-btn" @click="detail=null">关闭</button></div>
+    </div>
+  </div>
+
+  <!-- 需求点说明 -->
+  <button class="spec-btn" @click="showSpec=!showSpec">需求说明<span class="dot"></span></button>
+  <div class="spec-panel" v-if="showSpec">
+    <div class="sp-head"><span class="t">专用账号（中间服务商）· 需求点说明</span><span class="x" @click="showSpec=false">&times;</span></div>
+    <div class="sp-body">
+      <div style="color:#ef4444;font-weight:600;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 11px;margin-bottom:12px;font-size:13px;line-height:1.6">※ 仅针对于中间商的账户提现的说明</div>
+      <h4>一、提现入口控制</h4>
+      <ol><li>点击<b class="red">可用余额「提现」</b>仅弹出自动提现提示，<b class="red">不进入提现申请流程</b>，禁止中间服务商自助提现。</li><li>提现入口保留可点击，避免用户误以为入口异常。</li><li>仅限制<b class="red">可用余额提现</b>，不涉及保证金提取 / 充值入口，保证金照常操作。</li></ol>
+      <h4>二、系统自动提现</h4>
+      <ol><li>满足「已清算 + 已提车」或「已清算 + 已回收资料且无待审售后」即纳入可提现。</li><li>单结即时发起、月结次月 10 日统一发起。</li><li>备注自动带车牌，≤ 10 台合并一笔，超出拆分多笔。</li></ol>
+      <h4>三、售后退车抵扣</h4>
+      <ol><li>退车服务费优先抵扣同服务商其他<b>待提现</b>服务费，按成交时间<b>从早到晚</b>。</li><li>不足则记「待抵扣」，后续新服务费继续抵扣。</li></ol>
+      <h4>四、提现记录</h4>
+      <ol><li>展示提现时间 / 类型(其他) / 金额 / 状态 / 确认日期 / 车牌备注。<b class="red">类型目前从 BMS 后台看到操作类型是「其他」，需技术确认一下客户端发起提现的类型是什么？</b></li><li>多车合并提现展示对应车牌，支持「查看明细」。</li></ol>
+      <h4>五、冻结金额</h4>
+      <ol><li>「已冻结」由人工触发，<b class="red">不参与自动提现</b>，单列「我的冻结」明细。</li></ol>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
+createApp({
+  setup() {
+    const availableBalance = ref(12500.00);
+    const frozenBalance = ref(500.00);
+    const availableDeposit = ref(71500.00);
+    const frozenDeposit = ref(172500.00);
+
+    const showTip = ref(false);
+    const showSpec = ref(true);
+    const detail = ref(null);
+
+    const logTab = ref('balance');
+    const logPage = ref(1);
+    const PAGE = 8;
+
+    // 可用余额流水（中间服务商口径）
+    const balanceLog = [
+      { time:'2026-05-20 14:30', type:'提现', amount:-5000, status:'已处理', stClass:'st-ok', confirm:'05-20 14:31', note:'提现：粤A09CM5 粤B12345 粤A51WM2 …等 10 台' },
+      { time:'2026-05-19 11:20', type:'其他', amount:-1000, status:'已处理', stClass:'st-deduct', confirm:'05-19 11:20', note:'订单售后款项: 粤A0LK94 粤AY88B4 抵扣 粤D88888(退车)', hl:true },
+      { time:'2026-05-18 09:15', type:'收车款', amount:500, status:'已处理', stClass:'st-wait', confirm:'', note:'服务费用：粤C88888' },
+      { time:'2026-05-15 16:40', type:'其他', amount:-500, status:'已处理', stClass:'st-deduct', confirm:'05-15 16:40', note:'订单售后款项: 粤A66HU9 抵扣 粤D66666(退车)', hl:true },
+      { time:'2026-02-05 16:59', type:'钱包转账', amount:600, status:'已处理', stClass:'st-ok', confirm:'02-05 17:00', note:'初始化：粤A6125V' },
+      { time:'2026-02-05 15:21', type:'收车款', amount:500, status:'已处理', stClass:'st-ok', confirm:'02-05 15:22', note:'服务费用：粤AY88B4' },
+      { time:'2026-01-29 15:28', type:'收车款', amount:1100, status:'已处理', stClass:'st-ok', confirm:'01-29 15:29', note:'服务费用：粤A0LK94' },
+      { time:'2026-01-27 20:03', type:'收车款', amount:500, status:'已处理', stClass:'st-ok', confirm:'01-27 20:03', note:'服务费用：桂AY7S38' },
+      { time:'2026-01-25 19:51', type:'收车款', amount:500, status:'已处理', stClass:'st-ok', confirm:'01-25 19:51', note:'服务费用：粤A51WM2' },
+      { time:'2026-01-24 09:17', type:'收车款', amount:500, status:'已处理', stClass:'st-ok', confirm:'01-24 09:18', note:'服务费用：粤E910LY' },
+      { time:'2026-01-17 11:45', type:'收车款', amount:500, status:'已处理', stClass:'st-ok', confirm:'01-17 11:46', note:'服务费用：粤A90E9G' }
+    ];
+    const depositLog = [
+      { time:'2026-05-08 14:05', type:'提取保证金', amount:2000, status:'已处理', stClass:'st-ok', confirm:'05-08 14:05', note:'蒙QQB97P 违约金' },
+      { time:'2026-01-10 10:00', type:'保证金充值', amount:50000, status:'已处理', stClass:'st-ok', confirm:'01-10 10:01', note:'银行打款充值' }
+    ];
+    // 提现记录
+    const withdrawLog = [
+      { time:'2026-05-20 14:30', amount:-5000, status:'已处理', stClass:'st-ok', confirm:'05-20 14:31', note:'提现：粤A09CM5 粤B12345 粤A51WM2 …等 10 台', detail:'d10' },
+      { time:'2025-12-19 09:19', amount:-5200, status:'已处理', stClass:'st-ok', confirm:'2025-12-19 09:19', note:'提现：粤TT915K 粤AFC9616 粤AK220E 粤AE84377 粤A9F33F', detail:'d5' },
+      { time:'2026-05-07 15:07', amount:-500, status:'已处理', stClass:'st-ok', confirm:'05-07 15:07', note:'提现：粤A09CM5', detail:'d1' }
+    ];
+    const DETAILS = {
+      d5: { sub:'2025-12-19 · 5 台车合并', rows:[['粤TT915K',1100],['粤AFC9616',500],['粤AK220E',1500],['粤AE84377',1100],['粤A9F33F',1000]] },
+      d10:{ sub:'2026-05-20 · 10 台车合并', rows:[['粤A09CM5',500],['粤B12345',500],['粤A51WM2',500],['粤E910LY',500],['粤A90E9G',500],['粤A66HU9',500],['粤A86K0H',500],['粤A23502',500],['桂AY7S38',500],['粤AC20360',500]] },
+      d1: { sub:'2026-05-07 · 1 台车', rows:[['粤A09CM5',500]] }
+    };
+
+    const currentLog = computed(() => logTab.value === 'deposit' ? depositLog : balanceLog);
+    const logTotal = computed(() => Math.max(1, Math.ceil(currentLog.value.length / PAGE)));
+    const logPages = computed(() => Array.from({length: logTotal.value}, (_,i)=>i+1));
+    const pagedLog = computed(() => currentLog.value.slice((logPage.value-1)*PAGE, logPage.value*PAGE));
+    const pagedWd = computed(() => withdrawLog);
+
+    const detailTotal = computed(() => detail.value ? detail.value.rows.reduce((s,r)=>s+r[1],0) : 0);
+    function openDetail(key) { detail.value = DETAILS[key]; }
+
+    // 冻结
+    const frozenTab = ref('balance');
+    const frozenBalanceList = [
+      { time:'2026-05-22 16:49', item:'提现', amount:5000, note:'审批中冻结' },
+      { time:'2026-05-12 11:20', item:'服务费冻结', amount:500, note:'粤E12345（人工冻结）' }
+    ];
+    const frozenDepositList = [
+      { time:'2026-05-15 09:12', item:'车款保证金', amount:50000, note:'粤A66666' },
+      { time:'2026-05-08 14:05', item:'车款保证金', amount:30000, note:'蒙QQB97P' }
+    ];
+    const currentFrozen = computed(() => frozenTab.value === 'balance' ? frozenBalanceList : frozenDepositList);
+
+    function formatCN(n){ return Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+    function formatInt(n){ return Math.floor(n).toLocaleString('zh-CN'); }
+    function formatDecimal(n){ return String(Math.round((n-Math.floor(n))*100)).padStart(2,'0'); }
+    function formatAmount(a){ return (a<0?'-':'') + Math.abs(a).toLocaleString('zh-CN'); }
+
+    watch([logTab, logPage, frozenTab, showTip, detail, showSpec], () => nextTick(() => lucide.createIcons()));
+    onMounted(() => lucide.createIcons());
+
+    return {
+      availableBalance, frozenBalance, availableDeposit, frozenDeposit,
+      showTip, showSpec, detail, detailTotal, openDetail,
+      logTab, logPage, currentLog, logTotal, logPages, pagedLog, pagedWd, withdrawLog,
+      frozenTab, currentFrozen,
+      formatCN, formatInt, formatDecimal, formatAmount
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中间服务商提现优化 · 原型</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  body { margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; color: #1f2937; }
+  [v-cloak] { display: none; }
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+  .main-side { width: 196px; flex-shrink: 0; background: #1f2937; color: #cbd5e1; display: flex; flex-direction: column; }
+  .ms-logo { padding: 18px 18px 16px; font-size: 16px; font-weight: 700; color: #fff; line-height: 1.35; border-bottom: 1px solid #374151; }
+  .ms-logo span { display: block; font-size: 12px; font-weight: 400; color: #9ca3af; margin-top: 3px; }
+  .m-item { padding: 13px 18px; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; }
+  .m-item:hover { background: #283342; color: #fff; }
+  .m-item.on { background: #283342; color: #fff; border-left-color: #d12c1f; font-weight: 600; }
+  .m-group { padding: 15px 18px 5px; font-size: 12px; color: #6b7280; letter-spacing: .5px; }
+  .m-sub { padding: 10px 18px 10px 32px; font-size: 13.5px; color: #cbd5e1; cursor: pointer; border-left: 3px solid transparent; }
+  .m-sub:hover { background: #283342; color: #fff; }
+  .m-sub.on { background: #283342; color: #fff; border-left-color: #d12c1f; font-weight: 600; }
+  .content { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .view-flex { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .front-tabs { background: #fafbfc; display: flex; gap: 8px; padding: 9px 16px; border-bottom: 1px solid #eef0f3; flex-shrink: 0; }
+  .ft { padding: 6px 16px; font-size: 13px; color: #64748b; cursor: pointer; border-radius: 4px; }
+  .ft:hover { color: #d12c1f; }
+  .ft.on { background: #d12c1f; color: #fff; }
+  .frame { flex: 1; width: 100%; border: none; display: block; background: #fff; min-height: 0; }
+
+  .spec-wrap { flex: 1; display: flex; min-height: 0; }
+  .sub-side { width: 168px; flex-shrink: 0; background: #f7f8fa; border-right: 1px solid #e5e7eb; padding: 14px 0; overflow-y: auto; }
+  .s-item { padding: 10px 18px; font-size: 13.5px; color: #64748b; cursor: pointer; border-left: 3px solid transparent; }
+  .s-item:hover { color: #d12c1f; }
+  .s-item.on { color: #d12c1f; background: #fff; border-left-color: #d12c1f; font-weight: 600; }
+  .spec-content { flex: 1; min-width: 0; overflow-y: auto; padding: 26px 36px 50px; background: #fff; }
+  .md-body { font-size: 14px; color: #374151; line-height: 1.9; }
+  .md-body h1 { font-size: 24px; font-weight: 700; color: #1f2937; margin: 0 0 18px; padding-bottom: 14px; border-bottom: 2px solid #d12c1f; }
+  .md-body h2 { font-size: 19px; font-weight: 700; color: #1f2937; margin: 28px 0 12px; padding-left: 10px; border-left: 4px solid #d12c1f; }
+  .md-body h3 { font-size: 15.5px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; }
+  .md-body p { margin: 8px 0; }
+  .md-body ol, .md-body ul { margin: 8px 0; padding-left: 24px; }
+  .md-body li { margin: 4px 0; }
+  .md-body blockquote { margin: 10px 0; padding: 10px 14px; background: #fff7ed; border-left: 3px solid #f59e0b; color: #9a3412; border-radius: 0 4px 4px 0; }
+  .md-body strong { color: #1f2937; }
+  .md-body table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 12.5px; }
+  .md-body th, .md-body td { border: 1px solid #e5e7eb; padding: 6px 9px; text-align: left; vertical-align: top; word-break: keep-all; }
+  .md-body thead th { background: #f3f4f6; color: #1f2937; font-weight: 600; white-space: nowrap; }
+  .md-body tbody tr:nth-child(even) { background: #fafafa; }
+  .md-body tbody td:nth-child(6), .md-body tbody td:nth-child(7), .md-body tbody td:nth-child(8) { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+  .md-body .demo-btn { font-size: 12px; color: #fff; background: #7c3aed; border: none; padding: 2px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px; vertical-align: middle; font-weight: 500; font-family: inherit; }
+  .md-body .demo-btn:hover { background: #6d28d9; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak class="layout">
+  <aside class="main-side">
+    <div class="ms-logo">中间服务商提现优化<span>· 原型</span></div>
+    <div class="m-group">需求说明</div>
+    <div :class="['m-sub', active==='basic'?'on':'']" @click="active='basic'">背景 · 名词定义</div>
+    <div :class="['m-sub', active==='func'?'on':'']" @click="active='func'">功能点说明</div>
+    <div class="m-group">附件</div>
+    <div :class="['m-sub', active==='attach1'?'on':'']" @click="active='attach1'">附件1 · 服务商列表</div>
+    <div class="m-group">客户端界面</div>
+    <div :class="['m-sub', active==='pchome'?'on':'']" @click="active='pchome'">PC 首页</div>
+    <div :class="['m-sub', active==='pc'?'on':'']" @click="active='pc'">PC 专用账号</div>
+    <div :class="['m-sub', active==='mobile'?'on':'']" @click="active='mobile'">移动端提现</div>
+    <div :class="['m-item', active==='approval'?'on':'']" @click="active='approval'">审批流</div>
+  </aside>
+
+  <div class="content">
+    <div v-show="isSpec" class="view-flex">
+      <div v-show="active==='basic'" class="front-tabs">
+        <div v-for="t in basicTabs" :key="t.key" :class="['ft', basicTab===t.key?'on':'']" @click="basicTab=t.key"><b>{{ t.no }}</b> {{ t.label }}</div>
+      </div>
+      <div v-show="active==='func'" class="front-tabs">
+        <div v-for="t in funcTabs" :key="t.key" :class="['ft', funcTab===t.key?'on':'']" @click="funcTab=t.key"><b>{{ t.no }}</b> {{ t.label }}</div>
+      </div>
+      <div class="spec-content"><div class="md-body" v-html="specHtml"></div></div>
+    </div>
+    <iframe v-show="active==='pchome'" src="pc-home.html" class="frame"></iframe>
+    <iframe v-show="active==='pc'" src="pc.html" class="frame"></iframe>
+    <iframe v-show="active==='mobile'" src="mobile.html" class="frame"></iframe>
+    <iframe v-show="active==='approval'" src="approval.html" class="frame"></iframe>
+    <div v-show="active==='attach1'" style="flex:1;overflow-y:auto;background:#fff;padding:30px 40px 50px">
+      <div style="max-width:760px">
+        <h1 style="font-size:22px;font-weight:700;color:#1f2937;margin:0 0 0;padding-bottom:14px;border-bottom:2px solid #d12c1f">附件1 · 服务商列表（客服提供）</h1>
+        <p style="font-size:14px;color:#4b5563;line-height:1.85;margin:16px 0 6px">由客服提供的中间服务商结算清单，覆盖<b>月结</b>与<b>单结</b>两类服务商（共 222 条）。研发可据此建立「服务商 ↔ 区域经理」映射，并配置对应结算方式。</p>
+        <div style="font-size:14px;color:#1f2937;font-weight:600;margin:22px 0 10px">表内包含以下信息：</div>
+        <div style="display:grid;grid-template-columns:1fr;gap:10px">
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#fafbfc">
+            <div style="font-weight:600;color:#d12c1f;font-size:13.5px;margin-bottom:6px">① 服务商信息</div>
+            <div style="font-size:13px;color:#4b5563;line-height:1.8">服务商名称及账号（userName）、关联门店名称、对应区域经理等。</div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#fafbfc">
+            <div style="font-weight:600;color:#d12c1f;font-size:13.5px;margin-bottom:6px">② 关联区域经理信息</div>
+            <div style="font-size:13px;color:#4b5563;line-height:1.8">区域经理、区域总监、评估师。（即自动提现失败时的通知对象，见功能点 8.1）</div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;background:#fafbfc">
+            <div style="font-weight:600;color:#d12c1f;font-size:13.5px;margin-bottom:6px">③ 结算方式</div>
+            <div style="font-size:13px;color:#4b5563;line-height:1.8">月结 / 单结、结算方式编码、月结时间。</div>
+          </div>
+        </div>
+        <a href="中间服务商结算明单.xlsx" download style="display:inline-flex;align-items:center;gap:8px;margin-top:24px;background:#d12c1f;color:#fff;font-size:14px;font-weight:600;padding:11px 22px;border-radius:6px;text-decoration:none">⬇ 下载 Excel（研发用）</a>
+        <div style="font-size:12px;color:#94a3b8;margin-top:10px">文件：中间服务商结算明单.xlsx</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3.1 服务商识别位置 示例弹框 -->
+  <div id="providerImgMask" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)hideProviderImg()">
+    <div style="background:#fff;border-radius:10px;max-width:940px;width:calc(100vw - 40px);max-height:90vh;overflow:auto">
+      <div style="padding:14px 20px;border-bottom:1px solid #eef0f3;display:flex;justify-content:space-between;align-items:center">
+        <b style="font-size:15px">中间服务商识别位置 · BMS 订单详情「款项信息」</b>
+        <span style="cursor:pointer;color:#94a3b8;font-size:22px;line-height:1" onclick="hideProviderImg()">&times;</span>
+      </div>
+      <div style="padding:20px">
+        <div style="font-size:13px;color:#475569;line-height:1.7;margin-bottom:14px">在 BMS 订单详情「款项信息」中，存在「服务商」费用项、且展示具体服务商名称时，该服务商即为本需求中的<b>中间服务商</b>。</div>
+        <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;font-size:13px">
+          <div style="background:#fafbfc;padding:12px 16px;border-bottom:1px solid #eef0f3"><b>粤TDH628</b> · 长安凯程 长安之星2 2008款 1.0L MT 升级型 · <span style="color:#16a34a">订单状态：已完成</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);padding:14px 16px;border-bottom:1px dashed #eef0f3;gap:8px">
+            <div><div style="color:#94a3b8;font-size:12px">成交价</div><div>¥201.00</div></div>
+            <div><div style="color:#94a3b8;font-size:12px">手续费</div><div>¥0.00</div></div>
+            <div><div style="color:#94a3b8;font-size:12px">平台使用费</div><div>¥500.00</div></div>
+            <div><div style="color:#94a3b8;font-size:12px">评估费</div><div>¥0.00</div></div>
+            <div><div style="color:#94a3b8;font-size:12px">综合服务费</div><div>¥0.00</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);padding:16px;gap:10px">
+            <div style="border:1px solid #f1f5f9;border-radius:6px;padding:10px"><div style="color:#94a3b8;font-size:12px">买家 · 已付款</div><div style="font-size:16px;margin:4px 0">¥701.00</div><div style="color:#64748b;font-size:12px">中山广传汽车服务</div></div>
+            <div style="border:1px solid #f1f5f9;border-radius:6px;padding:10px"><div style="color:#94a3b8;font-size:12px">车主/卖家 · 已收款</div><div style="font-size:16px;margin:4px 0">¥0.00</div><div style="color:#64748b;font-size:12px">陈桥带</div></div>
+            <div style="border:1px solid #f1f5f9;border-radius:6px;padding:10px"><div style="color:#94a3b8;font-size:12px">门店 · 已收款</div><div style="font-size:16px;margin:4px 0">¥201.00</div><div style="color:#64748b;font-size:12px">中山小鹏</div></div>
+            <div style="border:2px solid #ef4444;border-radius:6px;padding:10px;background:#fef2f2"><div style="color:#94a3b8;font-size:12px">服务商 · 已收款</div><div style="font-size:16px;margin:4px 0">¥0.00</div><div style="color:#ef4444;font-weight:600;font-size:12px">中山凯得（服务商）</div></div>
+            <div style="border:1px solid #f1f5f9;border-radius:6px;padding:10px"><div style="color:#94a3b8;font-size:12px">唯普毛利 · 已收款</div><div style="font-size:16px;margin:4px 0">¥500.00</div></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:#ef4444">↑ 红框「服务商」费用项即中间服务商，其服务费结算到对应服务商账户。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MD = `# 中间服务商提现流程优化需求
+
+## 一、背景
+
+目前部分订单撮合方在内部被定义为中间服务商。中间服务商为平台介绍客户，订单成交后平台按订单向其结算服务费/佣金。
+历史上系统给中间服务商分配了买家账户，中间服务商可登录买家账户，在专用账号中自行发起提现。现有流程存在以下问题：
+1. 服务商手动提现时，经常出现车牌备注错误、重复备注、未备注等情况，导致审批人员无法准确识别提现对应车辆，审批流程受阻。
+2. 审批时需要人工判断车辆是否已提走、资料是否已回收，手续繁琐，影响审批效率。
+3. 若订单后续发生售后退车，已提现的服务费无法有效收回，存在资金风险。
+
+## 二、需求目的
+
+通过系统自动判断订单状态、服务费状态、售后状态和结算周期，统一由系统发起中间服务商提现，禁止中间服务商在客户端自行发起提现。
+
+本次优化目标：
+1. 简化中间服务商提现流程。
+2. 通过系统条件控制提现发起时机，提高资金监管能力。
+3. 减少人工备注错误、重复备注、无备注导致的审批阻塞。
+4. 自动处理售后退车服务费抵扣，降低已提现后无法追回的风险。
+5. 提高审批效率，中控中心节点由系统自动处理。
+
+## 三、名词定义
+
+### 3.1 中间服务商 <button class="demo-btn" onclick="showProviderImg()">线上示例</button>
+中间服务商是指成交订单中存在“结算给第三服务商”的服务商。
+识别位置参考 BMS 订单详情页：
+1. 在订单详情的款项/费用区域中，存在“服务商”费用项。
+2. “服务商”费用项中展示具体服务商名称及服务费金额。
+3. 该订单存在结算给服务商的金额时，该服务商即为本需求中的中间服务商。
+
+### 3.2 已提车
+已提车是指订单已发起以下任一提车类型流程：
+1. 自过户提车。
+2. 已售交付。
+3. 未过户提前放行(临)。
+
+只要发起上述任一提车流程，即视为该订单已提车。
+
+### 3.3 已完成资料回收
+已完成资料回收是指订单对应车辆的过户资料已完成回收。
+
+### 3.4 售后退车流程
+售后退车流程是指订单进入售后退车相关流程。若售后退车流程处于待审批中，则视为存在未完成售后风险。
+
+### 3.5 单结服务商
+单结服务商是指服务费满足提现条件后，系统即时发起提现处理的服务商。
+
+### 3.6 月结服务商
+月结服务商是指服务费按月统一结算的服务商。月结服务商符合条件的服务费，于次月 10 日由系统统一发起提现处理。
+
+## 四、业务范围
+
+### 本次包含
+1. **1、中间服务商 自动提现相关**
+   - 提现入口控制、自动提现、售后退车服务费自动抵扣
+   - 买家个人中心提现审批流：自动提现审批流中控中心节点自动通过
+2. **2、衍生代办 自动提现相关**
+   - 衍生代办服务费自动提现(剔除限定账号)
+3. **3、系统提现失败企微消息通知**
+4. **4、功能上线后的数据初始化**
+
+## 7、上线初始化设计
+系统上线前，需要先完成中间服务商、服务费记录、待抵扣金额和结算配置的初始化，确保上线后自动提现任务只处理应处理的数据，不重复提现、不漏抵扣。
+
+初始化处理规则：
+1. 已提现或提现审批中的服务费，不再进入系统自动提现。
+2. BMS 人工已处理的服务费，不再进入系统自动提现。
+3. 上线前已提现且无法追回的历史数据，本次不批量生成负余额。
+4. 上线前已确认需要继续扣回的金额，可初始化为待抵扣金额，后续通过新增可提现服务费继续抵扣。
+5. 初始化后的服务费记录需具备唯一业务标识，建议以订单、车牌、服务商、费用类型组合防重。
+6. 自动提现任务每次执行前需校验服务费处理状态，保证任务重复执行时不会重复提现或重复抵扣。
+
+上线切换建议：
+1. 上线前先完成初始化数据核对，输出服务商名称、服务商用户名、预计提现金额、待提现金额、待抵扣金额、关联车牌、退车车牌（如下表）。
+2. 初始化期间如存在人工提现，需在任务执行前重新同步处理状态。
+3. 首次自动提现建议先灰度执行或生成待处理清单，经业务核对后再正式发起提现。
+4. 正式上线后，客户端中间服务商手动提现入口立即切换为提示拦截。
+
+初始化数据核对表（示例）：
+
+| 序号 | 结算类型 | 服务商名称 | 服务商账号 | 关联门店 | 待提现金额 | 待抵扣金额 | 预计提现金额 | 关联车牌 | 退车车牌 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 月结 | 广州市番禺区洛浦梓锋汽车维修服务部 | pylpzf | 33 | 12,850.00 | 320.00 | 12,530.00 | 粤A8K21F、粤A6P93M | 粤A6P93M |
+| 2 | 单结 | 中山市百宁元商业服务有限公司 | zsgcfw | 8 | 4,360.50 | 0.00 | 4,360.50 | 粤B2J76Q | — |
+| 3 | 单结 | 广州市智茂汽车服务有限公司 | gzzmfw | 39 | 9,875.20 | 580.20 | 9,295.00 | 粤T5L18D、粤T9C32H | 粤T9C32H |
+| 4 | 单结 | 广州市浩俊汽车有限公司 | gzjhfw | 15 | 2,160.00 | 120.00 | 2,040.00 | 粤E3R60P | 粤E3R60P |
+| 5 | 月结 | 广州市悠悦汽车服务有限公司 | gzyyfw | 48 | 34,210.80 | 1,650.00 | 32,560.80 | 粤A1N89K、粤A7M26V、粤A0Q51X | 粤A0Q51X |
+
+字段说明：
+- **服务商账号**：指 userName。
+- **服务商姓名**：指 trueName。
+- **预计提现金额 = 待提现金额 - 待抵扣金额**，指服务商在正式发起提现前的实际可提现金额。
+- **待提现金额**：指上线初始化时，服务商当前账户中已结算、可发起提现的金额总和。
+- **待抵扣金额**：指服务商在发起提现前需先从可提现金额中扣减的金额，通常来自退车。
+
+## 1、客户端提现入口控制
+
+### 1.1 控制对象
+中间服务商登录买家账户后，在专用账号页面可以看到可用余额、可用保证金和提现入口。
+
+本次优化后，中间服务商不允许在客户端自行发起服务费提现。
+
+### 1.2 页面交互
+中间服务商点击“提现”按钮时，系统不进入提现申请流程，需弹出提示文案。
+
+建议提示文案：
+
+> 当前账号服务费提现由系统自动发起，无需手动申请。符合提现条件后，系统将按结算规则自动处理。
+
+### 1.3 入口状态
+提现按钮可点击，但点击后仅展示提示，不允许进入提现申请页面，不允许提交提现申请。
+
+### 1.4 前端闭环形态
+客户端需要让中间服务商明确知道“不是不能提现，而是由系统自动提现”，避免用户误解余额被冻结或入口异常。
+
+前端交互闭环：
+1. 中间服务商进入专用账号页面后，仍展示可用余额、可用保证金、交易流水和提现入口。
+2. 用户点击“提现”按钮，系统展示提示弹窗或轻提示，不跳转提现申请页。
+3. 提示文案需说明系统自动发起、无需手动申请、符合条件后按结算规则处理。
+4. 用户关闭提示后，停留在当前专用账号页面。
+5. 后续系统自动提现成功、抵扣或失败后，相关记录仍通过现有钱包流水/交易明细展示。
+
+页面表现建议：
+1. 提现入口保持现有按钮样式，避免用户找不到入口。
+2. 可在提现入口或可用余额旁增加圆形提示图标，用于说明中间服务商提现规则。
+3. 圆形提示图标点击或悬浮时，展示说明：服务费由系统自动提现，满足条件后自动处理；如发生售后退车，将优先抵扣待提现服务费。
+4. 若前端已有统一的感叹号/问号提示组件，优先复用现有组件样式。
+
+### 1.5 前端界面展示要求
+中间服务商使用的仍是买家账户体系，但页面展示内容需要按中间服务商业务语义处理，不能完全套用普通买家交易记录。
+
+本次前端界面原型只覆盖“可用余额”的提现交互，不改造可用保证金的提取/充值交互。
+
+前端原型文件：
+
+> service-provider-withdrawal-ui.canvas.tsx
+
+移动端页面要求：
+1. 移动端专用账号页面可参考现有“账户总览”布局，展示账户总览、可用余额、已冻结金额、可用保证金、绑定银行卡等信息。
+2. 移动端截图中的用户不是中间服务商，其交易记录多为支付车款，仅可作为页面布局参考，不作为中间服务商交易记录的数据口径。
+3. 中间服务商的交易记录应展示其收取的服务费、系统自动提现、售后抵扣、保证金相关流水等记录。
+4. 中间服务商点击可用余额或交易记录入口后，应进入交易记录列表。
+5. 交易记录列表需支持展示时间、类型、金额、状态、备注等信息。
+6. 交易记录备注需展示车牌或抵扣关系，便于服务商理解每笔流水来源。
+7. 可用余额区域的“提现”按钮点击后，仅展示自动提现提示，不进入提现申请页。
+8. 可用余额旁可增加圆形提示图标，说明自动提现和售后抵扣规则。
+
+PC 端页面要求：
+1. PC 端专用账号页面展示可用余额、可用保证金、绑定银行卡、交易流水等信息。
+2. PC 端中间服务商流水可体现“收车款/服务费”等入账记录，作为中间服务商业务场景参考。
+3. PC 端交易流水备注需展示服务费用对应车牌，例如“服务费用：粤A09CM5”。
+4. PC 端自动提现记录需在交易流水中展示提现金额、状态、确认日期、备注车牌等信息。
+5. 可用余额区域的“提现”按钮点击后，仅展示自动提现提示，不进入提现申请页。
+6. 可用余额旁可增加圆形提示图标，说明自动提现和售后抵扣规则。
+
+提现记录要求：
+1. 需要提供提现记录展示能力，可复用交易流水中的提现类型记录，也可在交易记录中增加“提现记录”筛选。
+2. 提现记录需展示提现时间、提现金额、处理状态、确认日期、提现备注。
+3. 提现备注需展示本次提现包含的车牌，多个车牌按自动提现摘要规则展示。
+4. 系统自动提现产生的记录需能与普通收款、售后抵扣、保证金流水区分。
+5. 若一笔提现由多台车合并生成，提现记录备注中展示合并车牌；若因摘要长度限制拆分多笔，每笔提现记录分别展示对应车牌。
+
+建议交易记录类型：
+1. 服务费入账。
+2. 系统自动提现。
+3. 售后服务费抵扣。
+4. 保证金提取。
+5. 保证金充值。
+6. 其他现有类型。
+
+## 2、中间服务商自动提现规则
+
+### 2.1 自动提现触发对象
+成交订单中存在结算给第三服务商的服务费时，该服务费进入中间服务商自动提现判断范围。
+
+### 2.2 常规提现条件
+单台订单满足以下任一条件时，系统自动纳入可提现范围：
+
+条件一：
+1. 单台订单已完成清算。
+2. 单台订单已提车。
+
+条件二：
+1. 单台订单已完成清算。
+2. 单台订单已完成资料回收。
+3. 单台订单不存在待审批中的售后退车流程。
+
+### 2.3 结算周期
+1. 单结服务商：服务费满足自动提现条件后，系统即时发起提现。
+2. 月结服务商：服务费满足自动提现条件后，于次月 10 日由系统统一发起提现。
+3. 月结服务商若上月存在未提现服务费，次月系统继续处理其中已符合条件的剩余部分。
+
+### 2.4 自动提现合并规则
+系统自动发起提现时，按服务商维度合并符合条件的服务费。
+
+合并规则：
+1. 自动提现摘要备注需展示车牌。
+2. 备注格式示例：粤A123456、粤B123456。
+3. 按摘要长度限制控制，最多 10 台车合并发起一笔提现。
+4. 超过 10 台车时，系统自动拆分为多笔提现。
+
+### 2.5 自动提现金额
+自动提现金额为本次符合提现条件的服务费金额，扣除该服务商待抵扣售后退车服务费后的剩余可提现金额。
+
+若抵扣后金额为 0，则不发起提现。
+
+### 2.6 冻结金额处理
+1. 服务商账户中“已冻结”金额由人工触发。
+2. 已冻结金额不纳入自动提现判断范围，系统自动提现时跳过已冻结部分。
+
+## 3、售后退车服务费处理规则
+
+### 3.1 已提车或已完成资料回收后发生售后退车
+订单已提车或已完成资料回收后，如发生售后退车，需要收回该订单对应服务费。
+
+处理规则：
+1. 系统记录该退车订单应扣回的服务费金额。
+2. 优先使用同一服务商名下其他车辆待提现服务费进行抵扣。
+3. 抵扣顺序按车辆成交时间从早到晚依次抵扣。
+4. 成交时间越早的车辆优先抵扣。
+5. 若一台车服务费不足以抵扣，则继续抵扣下一台符合条件车辆的服务费，直到累计扣完。
+6. 若当前可抵扣服务费不足，则记录剩余待抵扣金额，等待该服务商后续订单产生服务费后继续抵扣。
+7. 若抵扣后仍存在符合提现条件的余额，系统自动发起提现。
+
+### 3.2 抵扣备注
+发生服务费抵扣时，钱包流水备注需清晰展示抵扣关系。
+
+备注格式：
+
+> 订单售后款项: {被抵扣车牌} 抵扣 {退车车牌}(退车)
+
+示例：
+
+> 订单售后款项: 粤A66HU9 抵扣 粤D66666(退车)
+
+### 3.3 待抵扣金额
+若退车服务费未抵扣完，不形成服务商负余额，仅记录剩余待抵扣金额。
+
+后续该服务商产生新的可提现服务费时，系统优先抵扣历史待抵扣金额，抵扣完成后才允许发起自动提现。
+
+## 4、人工提现规则
+
+### 4.1 操作入口
+人工提现仅允许 BMS 后台操作。
+
+### 4.2 与系统自动提现互斥
+人工提现与系统自动提现互斥，避免同一笔服务费重复提现。
+
+互斥规则：
+1. 已被系统自动提现的服务费，不允许再次人工提现。
+2. 已被人工提现的服务费，不再进入系统自动提现。
+3. 已被售后抵扣的服务费，不允许再提现。
+
+## 5、衍生代办服务费自动提现
+
+### 5.1 适用范围
+适用于衍生代办服务费。
+
+不包含以下服务商或账号：
+1. 汇和。
+2. 唯普。
+3. 唯普云。
+4. 未实名认证的服务商账号。
+
+### 5.2 触发条件
+衍生代办订单状态为“已完结”时，系统自动发起对应服务商费用结算。
+
+### 5.3 提现备注
+衍生服务订单自动提现备注为车牌。
+
+## 6、审批流程
+
+### 6.1 现有流程
+原个人中心买家提现审批流程：
+
+> 发起人 → 中控中心 → 财务 → 经管 → 出纳执行
+
+### 6.2 优化后流程
+本次优化不新增独立流程，沿用上述买家提现审批流程；仅针对「系统自动发起的中间服务商提现」这一类型，将中控中心节点改为系统自动过审，其余节点（财务、经管、出纳执行）保持不变。
+
+> 系统自动发起 → 中控中心（系统自动过审）→ 财务 → 经管 → 出纳执行
+
+### 6.3 中控中心自动通过规则
+系统自动发起的中间服务商提现申请，中控中心节点自动通过。
+
+## 8、自动提现失败处理
+
+### 8.1 失败提醒
+自动提现发起失败时，系统通过企微消息提醒对应服务商的区域经理及客服（闫珂、潘彩欣）；如 1 个服务商关联多个区域经理，则全部通知。
+
+企微通知模板：
+
+<div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;font-size:13px;line-height:1.9;color:#334155">【自动提现失败】<br>{服务商名称}（{服务商账号}）提现失败：<br>车牌：{涉及车牌}<br>原因：{失败原因}<br>时间：{失败时间}</div>
+
+### 8.2 失败记录
+<b style="color:#ef4444">自动提现失败后，需人工手动处理该笔提现。</b>
+
+## 十二、数据状态建议
+
+为避免重复提现、重复抵扣，建议服务商服务费记录至少具备以下处理状态：
+1. 待判断。
+2. 待提现。
+3. 已发起提现。
+4. 已提现。
+5. 已抵扣。
+6. 待抵扣。
+7. 提现失败。
+
+具体状态可由研发结合现有数据表设计，不要求新增独立状态表。
+
+## 十三、验收标准
+
+### 13.1 客户端提现入口
+1. 中间服务商登录客户端专用账号后，点击提现按钮，不进入提现申请流程。
+2. 系统展示提示文案：当前账号服务费提现由系统自动发起，无需手动申请。符合提现条件后，系统将按结算规则自动处理。
+3. 页面可通过圆形提示图标或现有提示组件说明自动提现规则。
+4. 用户关闭提示后仍停留在专用账号页面。
+5. 移动端中间服务商交易记录展示服务费入账、系统自动提现、售后抵扣等流水，不展示普通买家支付车款口径。
+6. PC 端中间服务商交易流水可展示收款、服务费、自动提现等记录，备注需包含车牌。
+7. 系统自动提现后，前端可查看对应提现记录，记录包含时间、金额、状态、确认日期、备注车牌。
+
+### 13.2 常规自动提现
+1. 单结服务商订单完成清算且已提车后，系统可自动发起提现。
+2. 单结服务商订单完成清算、完成资料回收且无待审批售后退车流程后，系统可自动发起提现。
+3. 月结服务商符合条件的服务费，于次月 10 日统一自动发起提现。
+4. 自动提现备注展示车牌。
+5. 超过 10 台车时，系统拆分多笔提现。
+
+### 13.3 售后抵扣
+1. 未提车且已发起售后退车的订单，不发起服务费提现。
+2. 已提车或已完成资料回收后发生售后退车，系统记录待抵扣服务费。
+3. 系统按同一服务商名下车辆成交时间从早到晚依次抵扣。
+4. 被抵扣车辆服务费不再提现。
+5. 当前服务费不足以抵扣时，剩余金额记录为待抵扣，等待后续订单继续抵扣。
+6. 抵扣完成后仍有可提现余额的，系统自动发起提现。
+
+### 13.4 人工提现
+1. BMS 后台仍可按现有能力发起人工提现。
+2. 人工提现与自动提现互斥，不允许同一笔服务费重复提现。
+
+### 13.5 审批流程
+1. 系统自动发起的提现申请，中控中心节点自动通过。
+2. 后续仍进入财务、经管、出纳执行节点。
+
+### 13.6 失败提醒
+1. 自动提现发起失败时，系统向对应服务商的区域经理及客服（闫珂、潘彩欣）发送企微消息提醒；服务商关联多个区域经理时全部通知。
+2. 企微消息包含服务商名称、服务商账号、车牌、失败原因、失败时间（见 8.1 通知模板）。
+3. 系统记录失败原因，便于后续处理。
+
+### 13.7 初始化验收
+1. 系统上线前完成中间服务商范围初始化。
+2. 系统上线前完成服务商结算方式初始化。
+3. 系统上线前完成历史服务费处理状态初始化。
+4. 已提现、审批中、人工已处理的服务费，不进入自动提现。
+5. 已确认的待抵扣金额可在上线后继续通过新增服务费抵扣。
+6. 自动提现任务重复执行时，不发生重复提现或重复抵扣。
+
+## 十四、待确认事项
+
+1. 自动提现任务执行时间：单结是否实时触发，还是通过固定频率定时任务扫描。（需求方意向：实时触发，具体由技术确定）
+2. 月结任务执行时间：次月 10 日具体执行时间点。（确认：次月 10 日 上午 10:00）
+3. 企微消息接收人范围。（确认：对应服务商的区域经理 + 客服 闫珂、潘彩欣；服务商关联多个区域经理时全部通知）
+4. 自动提现失败后是否需要系统自动重试，以及重试次数。
+5. 现有服务费记录是否已具备订单、车牌、服务商、成交时间、清算状态、提车状态、资料回收状态、售后状态等字段。
+6. 首次上线是否需要灰度执行或先生成待处理清单供业务核对。
+`;
+
+const { createApp, ref, computed } = Vue;
+createApp({
+  setup() {
+    const active = ref('basic');
+    const basicTab = ref('b1');
+    const funcTab = ref('f5');
+    function render(seg){ return window.marked ? marked.parse(seg) : seg; }
+    const i4 = MD.indexOf('## 四'), i42 = MD.indexOf('## 7、上线初始化设计');
+    // 背景·名词定义：第一～四章拆成 4 个 tab（需求范围仅保留 4.1；4.2 初始化已移入功能点说明并重排为 7）
+    const basicTabs = [
+      { key:'b1', no:'一', label:'背景' },
+      { key:'b2', no:'二', label:'目的' },
+      { key:'b3', no:'三', label:'名词定义' },
+      { key:'b4', no:'四', label:'需求范围' }
+    ];
+    const basicSegs = {
+      b1: MD.slice(0, MD.indexOf('## 二、')),
+      b2: MD.slice(MD.indexOf('## 二、'), MD.indexOf('## 三、')),
+      b3: MD.slice(MD.indexOf('## 三、'), i4),
+      b4: MD.slice(i4, i42).replace('## 四、业务范围', '## 四、需求范围')
+    };
+    // 功能点说明：原五～十一章 + 初始化，重排为 1～8 共 8 个 tab（mark/next 用正文章节标题切片）
+    const funcTabs = [
+      { key:'f5',  no:'1', label:'入口控制', mark:'## 1、', next:'## 2、'   },
+      { key:'f6',  no:'2', label:'自动提现', mark:'## 2、', next:'## 3、'   },
+      { key:'f7',  no:'3', label:'售后抵扣', mark:'## 3、', next:'## 4、'   },
+      { key:'f8',  no:'4', label:'人工提现', mark:'## 4、', next:'## 5、'   },
+      { key:'f9',  no:'5', label:'衍生代办', mark:'## 5、', next:'## 6、'   },
+      { key:'f10', no:'6', label:'审批流程', mark:'## 6、', next:'## 8、'   },
+      { key:'init', no:'7', label:'初始化',   mark:'## 7、上线初始化设计', next:'## 1、' },
+      { key:'f11', no:'8', label:'失败处理', mark:'## 8、', next:'## 十二、' }
+    ];
+    const funcSegs = {};
+    funcTabs.forEach(t => {
+      let seg = MD.slice(MD.indexOf(t.mark), MD.indexOf(t.next));
+      if (t.key === 'f5') seg = seg.replace(/### 1\.4 前端闭环形态[\s\S]*$/, '');
+      funcSegs[t.key] = seg;
+    });
+    const isSpec = computed(() => ['basic','func'].includes(active.value));
+    const specHtml = computed(() => {
+      if (active.value === 'basic') return render(basicSegs[basicTab.value]);
+      if (active.value === 'func') return render(funcSegs[funcTab.value]);
+      return '';
+    });
+    return { active, basicTab, basicTabs, funcTab, funcTabs, isSpec, specHtml };
+  }
+}).mount('#app');
+window.showProviderImg = function(){ document.getElementById('providerImgMask').style.display = 'flex'; };
+window.hideProviderImg = function(){ document.getElementById('providerImgMask').style.display = 'none'; };
+</script>
+</body>
+</html>

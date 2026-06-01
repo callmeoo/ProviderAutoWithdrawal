@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人中心 · 首页 · 唯普汽车</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+[v-cloak] { display: none; }
+.pc-main { padding-top: 18px; }
+.hero { background: #fff; border-radius: 10px; padding: 26px 32px; display: flex; gap: 36px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 16px; }
+.hero .user { display: flex; flex-direction: column; align-items: center; width: 180px; flex-shrink: 0; }
+.hero .avatar { width: 86px; height: 86px; border-radius: 50%; background: linear-gradient(135deg,#e2e8f0,#cbd5e1); display: flex; align-items: center; justify-content: center; color: #fff; }
+.hero .uname { font-size: 15px; color: #1f2937; margin-top: 10px; font-weight: 500; }
+.hero .vip { margin-top: 6px; font-size: 11px; color: #fff; background: linear-gradient(135deg,#f59e0b,#d97706); padding: 2px 12px; border-radius: 10px; }
+.hero .acct { flex: 1; }
+.hero .acct h3 { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 16px; }
+.acct-line { display: flex; align-items: center; gap: 18px; font-size: 14px; padding: 7px 0; }
+.acct-line .lab { color: #64748b; }
+.acct-line .val { color: #1f2937; font-variant-numeric: tabular-nums; }
+.acct-line .links { margin-left: 22px; display: flex; gap: 16px; }
+.acct-line .links a { color: var(--pc-red); cursor: pointer; }
+.acct-line .links a:hover { text-decoration: underline; }
+.acct-line .links a.muted { color: #b3b8c0; }
+.help-dot { width: 15px; height: 15px; border-radius: 50%; background: var(--pc-red); color: #fff; font-size: 10px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+
+.card { background: #fff; border-radius: 10px; padding: 20px 28px; box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 16px; }
+.card .ct { font-size: 15px; font-weight: 600; color: #1f2937; margin-bottom: 18px; }
+.row-items { display: flex; gap: 80px; padding: 6px 0 10px; }
+.it { display: flex; align-items: center; gap: 16px; }
+.it .ico { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: #fff; }
+.it .ico.a { background: linear-gradient(135deg,#fb923c,#f97316); }
+.it .ico.b { background: linear-gradient(135deg,#f87171,#ef4444); }
+.it .ico.c { background: linear-gradient(135deg,#f59e0b,#d97706); }
+.it .ico.d { background: linear-gradient(135deg,#fca5a5,#f87171); }
+.it .num { font-size: 24px; color: var(--pc-red); font-weight: 600; }
+.it .num small { font-size: 13px; color: #64748b; font-weight: 400; margin-left: 2px; }
+.it .lbl { font-size: 13px; color: #64748b; margin-top: 2px; }
+.follow-empty { height: 120px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-size: 13px; }
+
+.mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; z-index: 9000; }
+.box { background: #fff; width: 440px; max-width: calc(100vw - 32px); border-radius: 10px; padding: 24px; }
+.box .bx-h { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; }
+.box .bx-h .ic { width: 30px; height: 30px; border-radius: 50%; background: var(--pc-red-light); color: var(--pc-red); display: flex; align-items: center; justify-content: center; }
+.box .bx-p { font-size: 14px; color: #475569; line-height: 1.8; margin-top: 14px; }
+.box .bx-foot { margin-top: 20px; text-align: right; }
+.box .bx-btn { background: var(--pc-red); color: #fff; border: none; padding: 9px 22px; border-radius: 6px; font-size: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <div class="pc-topbar"><div class="topbar-inner">
+    <div><span style="margin-right:6px">cptest01</span><a href="#">退出</a></div>
+    <div><a href="#">唯普首页</a><span class="sep">|</span><a href="#">个人中心</a><span class="sep">|</span><a href="#">移动唯普</a><span class="sep">|</span><a href="#">商家合作</a><span class="sep">|</span><a href="#">网站公告</a><span class="sep">|</span><a href="#" class="danger">联系客服</a></div>
+  </div></div>
+  <div class="pc-nav"><div class="pc-nav-inner">
+    <a href="#" class="brand"><div class="brand-zh">唯普汽车</div><div class="brand-en">www.chevip.com</div></a>
+    <div class="nav-list">
+      <a class="nav-item active">我的首页</a>
+      <a class="nav-item">我的交易 ▾</a>
+      <a class="nav-item">专用账号</a>
+      <a class="nav-item">我的信息 ▾</a>
+    </div>
+  </div></div>
+
+  <div class="pc-main">
+    <!-- 用户 + 专用账号 -->
+    <div class="hero">
+      <div class="user">
+        <div class="avatar"><i data-lucide="user" class="w-9 h-9"></i></div>
+        <div class="uname">cptest01</div>
+        <div class="vip">VIP 会员</div>
+      </div>
+      <div class="acct">
+        <h3>专用账号</h3>
+        <div class="acct-line">
+          <span class="lab">可用余额（服务费）</span>
+          <span class="val">139,648,697.94 元</span>
+          <span class="help-dot" @click="showTip = true">?</span>
+          <span class="links"><a class="muted">充值</a><a @click="showTip = true">提现</a></span>
+        </div>
+        <div class="acct-line">
+          <span class="lab">可用保证金</span>
+          <span class="val">75,500.00 元</span>
+          <span class="links"><a class="muted">充值</a><a class="muted">提取</a></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 我的资产 -->
+    <div class="card">
+      <div class="ct">我的资产</div>
+      <div class="row-items">
+        <div class="it"><div class="ico a"><i data-lucide="credit-card" class="w-6 h-6"></i></div><div><div class="num">5<small>张券未使用</small></div><div class="lbl">权益卡</div></div></div>
+        <div class="it"><div class="ico b"><i data-lucide="ticket" class="w-6 h-6"></i></div><div><div class="num">0<small>张券未使用</small></div><div class="lbl">优惠券</div></div></div>
+      </div>
+    </div>
+
+    <!-- 待确认的车 -->
+    <div class="card">
+      <div class="ct">待确认的车</div>
+      <div class="row-items">
+        <div class="it"><div class="ico c"><i data-lucide="home" class="w-6 h-6"></i></div><div><div class="num">33<small>台</small></div><div class="lbl">竞价大厅</div></div></div>
+        <div class="it"><div class="ico d"><i data-lucide="gavel" class="w-6 h-6"></i></div><div><div class="num">1<small>台</small></div><div class="lbl">专场拍</div></div></div>
+      </div>
+    </div>
+
+    <!-- 关注的车 -->
+    <div class="card">
+      <div class="ct">关注的车 <span style="float:right;font-size:13px;color:#64748b;cursor:pointer">全部 &gt;&gt;</span></div>
+      <div class="follow-empty">暂无关注车辆</div>
+    </div>
+  </div>
+
+  <!-- 提现提示 -->
+  <div class="mask" v-if="showTip" @click.self="showTip=false">
+    <div class="box">
+      <div class="bx-h"><span class="ic"><i data-lucide="info" class="w-4 h-4"></i></span>服务费由系统自动提现</div>
+      <div class="bx-p">当前账号服务费提现由系统自动发起，无需手动申请。符合提现条件后，系统将按结算规则自动处理；如发生售后退车，将优先抵扣待提现服务费。</div>
+      <div class="bx-foot"><button class="bx-btn" @click="showTip=false">我知道了</button></div>
+    </div>
+  </div>
+
+  <!-- 需求说明 -->
+  <button class="spec-btn" @click="showSpec=!showSpec">需求说明<span class="dot"></span></button>
+  <div class="spec-panel" v-if="showSpec">
+    <div class="sp-head"><span class="t">个人中心首页 · 需求点说明</span><span class="x" @click="showSpec=false">&times;</span></div>
+    <div class="sp-body">
+      <div style="color:#ef4444;font-weight:600;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 11px;margin-bottom:12px;font-size:13px;line-height:1.6">※ 仅针对于中间商的账户提现的说明</div>
+      <h4>一、首页提现入口控制</h4>
+      <ol><li>个人中心首页「专用账号」区的<b class="red">可用余额「提现」</b>入口，中间服务商点击同样<b class="red">仅弹自动提现提示、不进提现申请流程</b>。</li><li>与「专用账号」详情页的提现入口口径一致——全站可用余额提现入口统一拦截。</li><li>仅限制<b class="red">可用余额提现</b>，不涉及保证金提取 / 充值入口。</li></ol>
+      <h4>二、展示范围</h4>
+      <ol><li>此拦截仅对<b class="red">中间服务商</b>账户生效；普通买家首页提现照常。</li></ol>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+const { createApp, ref, watch, nextTick, onMounted } = Vue;
+createApp({
+  setup() {
+    const showTip = ref(false);
+    const showSpec = ref(true);
+    watch([showTip, showSpec], () => nextTick(() => lucide.createIcons()));
+    onMounted(() => lucide.createIcons());
+    return { showTip, showSpec };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

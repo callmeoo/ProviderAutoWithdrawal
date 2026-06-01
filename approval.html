@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人中心提现 · 审批详情 · 唯普汽车</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #eceef1; color: #1f2937; }
+  [v-cloak] { display: none; }
+  .stage { display: flex; flex-direction: column; align-items: center; padding: 24px 16px 48px; min-height: 100vh; }
+  .phone-cap { font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+
+  .phone-shell { width: 390px; height: 820px; background: #f2f3f5; border-radius: 36px; box-shadow: 0 16px 50px rgba(0,0,0,.18); overflow: hidden; border: 1px solid #e2e8f0; display: flex; flex-direction: column; position: relative; }
+
+  .ph-status { background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 9px 22px 6px; font-size: 14px; font-weight: 600; color: #1f2937; }
+  .ph-nav { background: #fff; display: flex; align-items: center; padding: 6px 14px 10px; }
+  .ph-nav .side { display: flex; align-items: center; gap: 14px; color: #1f2937; width: 70px; }
+  .ph-nav .title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; }
+  .ph-nav .right { width: 70px; display: flex; justify-content: flex-end; color: #1f2937; }
+  .ph-nav i { cursor: pointer; }
+
+  .ph-scroll { flex: 1; overflow-y: auto; padding: 12px 12px 16px; }
+
+  .c { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+
+  /* 申请人 */
+  .applicant { position: relative; border: 1.5px solid #c7d6f5; background: #f6f9ff; overflow: hidden; }
+  .applicant .who { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #1f2937; }
+  .applicant .who .avatar { width: 30px; height: 30px; border-radius: 7px; background: #e3edff; color: #3b6fd4; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .buyer-tag { position: absolute; top: 16px; right: 16px; font-size: 13px; color: #94a3b8; }
+  .stamp { position: absolute; top: 8px; right: 58px; width: 58px; height: 58px; border: 2px solid #36b37e; border-radius: 50%; color: #36b37e; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; transform: rotate(-18deg); letter-spacing: 1px; opacity: .9; box-shadow: inset 0 0 0 2.5px rgba(54,179,126,.25); }
+
+  /* 金额 */
+  .amt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; }
+  .amt-row .lbl { font-size: 15px; color: #4b5563; }
+  .amt-row .val { font-size: 15px; color: #1f2937; }
+  .amt-row .val.big { font-size: 20px; font-weight: 700; color: #d12c1f; }
+  .amt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 12px 0 4px; }
+  .amt-grid .cell .k { font-size: 13px; color: #6b7280; }
+  .amt-grid .cell .v { font-size: 15px; color: #1f2937; margin-top: 3px; }
+  .amt-grid .cell.frozen { background: #f1f2f4; border-radius: 8px; padding: 8px 12px; }
+  .amt-grid .cell.frozen .v { color: #6b7280; }
+  .reason { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f2f4; font-size: 14px; line-height: 1.7; }
+  .reason .k { color: #4b5563; }
+  .reason .v { color: #1f2937; word-break: break-all; }
+
+  /* 相关信息 */
+  .sec-title { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 12px; }
+  .kv { display: flex; padding: 7px 0; font-size: 14px; }
+  .kv .k { color: #4b5563; width: 88px; flex-shrink: 0; }
+  .kv .v { color: #1f2937; flex: 1; word-break: break-all; }
+  .kv .v.red { color: #d12c1f; font-weight: 600; }
+  .notice { margin-top: 10px; color: #d12c1f; font-size: 14px; line-height: 1.7; font-weight: 600; }
+
+  /* 记录表 */
+  .rec-title { font-size: 16px; font-weight: 700; color: #1f2937; margin-bottom: 4px; }
+  .rec-sub { font-size: 12px; color: #94a3b8; }
+  table.rt { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  table.rt th { color: #94a3b8; font-weight: 500; text-align: left; padding: 8px 6px; font-size: 13px; border-bottom: 1px solid #f1f2f4; }
+  table.rt td { padding: 12px 6px; color: #1f2937; border-bottom: 1px solid #f7f8fa; vertical-align: top; }
+  table.rt tr:last-child td { border-bottom: none; }
+  .rt-empty { padding: 16px 0 6px; text-align: center; color: #c2c8d0; font-size: 13px; }
+
+  /* 底部审批栏 */
+  .ph-foot { flex-shrink: 0; background: #fff; border-top: 1px solid #eef0f3; display: flex; align-items: center; gap: 12px; padding: 10px 16px 16px; }
+  .foot-flow { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #475569; font-size: 12px; cursor: pointer; width: 52px; flex-shrink: 0; }
+  .foot-flow i { color: #475569; }
+  .foot-done { flex: 1; background: #e8effb; color: #9bb4e3; border: none; border-radius: 10px; padding: 13px; font-size: 16px; font-weight: 600; text-align: center; cursor: default; }
+
+  /* 审批流转 弹层 */
+  .sheet-mask { position: absolute; inset: 0; background: rgba(15,23,42,.45); z-index: 50; display: flex; align-items: flex-end; }
+  .sheet { background: #fff; width: 100%; border-radius: 16px 16px 0 0; max-height: 76%; display: flex; flex-direction: column; animation: up .2s ease; }
+  @keyframes up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet-head { padding: 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+  .sheet-head .t { font-size: 16px; font-weight: 700; }
+  .sheet-head .x { color: #94a3b8; font-size: 22px; line-height: 1; cursor: pointer; }
+  .sheet-body { padding: 6px 18px 22px; overflow-y: auto; }
+  .tl-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-icon { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; margin-top: 1px; }
+  .tl-icon.done { background: #10b981; }
+  .tl-icon.auto { background: #1677ff; }
+  .tl-icon.cur { background: #f59e0b; }
+  .tl-icon.wait { background: #cbd5e1; }
+  .tl-body { flex: 1; }
+  .tl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .tl-title { font-size: 14px; font-weight: 600; color: #111827; }
+  .tl-title .auto-tag { font-size: 11px; color: #1677ff; background: #e6f0ff; border-radius: 3px; padding: 1px 6px; margin-left: 6px; font-weight: 500; }
+  .tl-time { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+  .tl-state { font-size: 12px; white-space: nowrap; }
+  .tl-state.cur { color: #f59e0b; }
+  .tl-state.wait { color: #b3b8c0; }
+  .tl-meta { font-size: 12.5px; color: #6b7280; margin-top: 4px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <div class="stage">
+    <div class="phone-cap">中控 / 审核 · 个人中心提现审批（移动端）</div>
+    <div class="phone-shell">
+
+      <!-- 状态栏 -->
+      <div class="ph-status">
+        <span>09:01</span>
+        <span class="flex items-center gap-1.5">
+          <i data-lucide="signal" class="w-4 h-4"></i>
+          <i data-lucide="wifi" class="w-4 h-4"></i>
+          <i data-lucide="battery-full" class="w-5 h-5"></i>
+        </span>
+      </div>
+
+      <!-- 导航 -->
+      <div class="ph-nav">
+        <span class="side"><i data-lucide="chevron-left" class="w-6 h-6"></i><i data-lucide="x" class="w-6 h-6"></i></span>
+        <div class="title">个人中心提现</div>
+        <span class="right"><i data-lucide="more-horizontal" class="w-6 h-6"></i></span>
+      </div>
+
+      <!-- 可滚动内容区 -->
+      <div class="ph-scroll">
+
+        <!-- 申请人 -->
+        <div class="c applicant">
+          <div class="stamp">通过</div>
+          <span class="buyer-tag">买家</span>
+          <div class="who"><span class="avatar"><i data-lucide="user" class="w-5 h-5"></i></span>申请人：武汉昌鑫宝过户服务</div>
+        </div>
+
+        <!-- 金额 -->
+        <div class="c">
+          <div class="amt-row"><span class="lbl">申请提现金额：</span><span class="val big">4290 元</span></div>
+          <div class="amt-row"><span class="lbl">钱包总额：</span><span class="val">7290.00 元</span></div>
+          <div class="amt-grid">
+            <div class="cell"><div class="k">可用余额</div><div class="v">4290.00元</div></div>
+            <div class="cell"><div class="k">可用保证金</div><div class="v">0.00元</div></div>
+            <div class="cell frozen"><div class="k">已冻结</div><div class="v">3000.00元</div></div>
+            <div class="cell frozen"><div class="k">已冻结</div><div class="v">0.00元</div></div>
+          </div>
+          <div class="reason"><span class="k">申请原因：</span><span class="v">{{ plates }}</span></div>
+        </div>
+
+        <!-- 相关信息 -->
+        <div class="c">
+          <div class="sec-title">相关信息</div>
+          <div class="kv"><span class="k">用户名：</span><span class="v red">武汉昌鑫宝过户服务(whcxb)</span></div>
+          <div class="kv"><span class="k">手机号：</span><span class="v">13986189634</span></div>
+          <div class="kv"><span class="k">证件号：</span><span class="v">91420100MA4KY5052G</span></div>
+          <div class="kv"><span class="k">开户名：</span><span class="v red">武汉昌鑫宝汽车服务有限公司</span></div>
+          <div class="kv"><span class="k">开户行：</span><span class="v">中国农业银行</span></div>
+          <div class="kv"><span class="k">银行卡：</span><span class="v">17071201040017913</span></div>
+          <div class="kv"><span class="k">实名认证时间：</span><span class="v">2024-10-25 15:03:11</span></div>
+          <div class="kv"><span class="k">账号注册时间：</span><span class="v">2024-10-25 14:51:01</span></div>
+          <div class="notice">注意：该账户用户名和开户名不一致，请仔细核查确认后再审批！</div>
+        </div>
+
+        <!-- 当前未完结订单 -->
+        <div class="c">
+          <div class="rec-title">当前未完结订单：</div>
+          <table class="rt">
+            <thead><tr><th>成交时间</th><th>车牌号</th><th>订单总价</th><th>订单状态</th></tr></thead>
+            <tbody><tr><td colspan="4" class="rt-empty">暂无未完结订单</td></tr></tbody>
+          </table>
+        </div>
+
+        <!-- 网银转账记录 -->
+        <div class="c">
+          <div class="rec-title">最近3个月网银转账记录：</div>
+          <div class="rec-sub">（不含微信及POS入金渠道）</div>
+          <div class="rt-empty">暂无记录</div>
+        </div>
+
+        <!-- 最近10次提现记录 -->
+        <div class="c">
+          <div class="rec-title">最近10次提现记录：</div>
+          <table class="rt">
+            <thead><tr><th>提现确认时间</th><th>提现类型</th><th>车牌号</th><th>金额</th></tr></thead>
+            <tbody>
+              <tr v-for="(r,i) in withdrawRecords" :key="i">
+                <td>{{ r.time }}</td><td>{{ r.type }}</td><td>{{ r.plate }}</td><td>{{ r.amount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 最近10次出价记录 -->
+        <div class="c">
+          <div class="rec-title">最近10次出价记录：</div>
+          <table class="rt">
+            <thead><tr><th>出价时间</th><th>车牌号</th><th>出价</th></tr></thead>
+            <tbody><tr><td colspan="3" class="rt-empty">暂无记录</td></tr></tbody>
+          </table>
+        </div>
+
+        <!-- 最近10次成交记录 -->
+        <div class="c">
+          <div class="rec-title">最近10次成交记录：</div>
+          <table class="rt">
+            <thead><tr><th>成交时间</th><th>车牌号</th><th>订单总价</th><th>订单状态</th></tr></thead>
+            <tbody><tr><td colspan="4" class="rt-empty">暂无记录</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- 底部审批栏 -->
+      <div class="ph-foot">
+        <div class="foot-flow" @click="showFlow=true">
+          <i data-lucide="share-2" class="w-5 h-5"></i>
+          <span>审批流</span>
+        </div>
+        <div class="foot-done">已审批:通过</div>
+      </div>
+
+      <!-- 审批流转 弹层 -->
+      <div class="sheet-mask" v-if="showFlow" @click.self="showFlow=false">
+        <div class="sheet">
+          <div class="sheet-head"><span class="t">审批流转 · WD20251021-0036</span><span class="x" @click="showFlow=false">&times;</span></div>
+          <div class="sheet-body">
+            <div v-for="(s,i) in steps" :key="i" class="tl-item">
+              <div :class="['tl-icon', s.state]"><i :data-lucide="s.icon" class="w-3.5 h-3.5"></i></div>
+              <div class="tl-body">
+                <div class="tl-head">
+                  <span class="tl-title">{{ s.title }}<span v-if="s.auto" class="auto-tag">系统自动通过</span></span>
+                  <span v-if="s.time" class="tl-time">{{ s.time }}</span>
+                  <span v-else :class="['tl-state', s.state]">{{ s.stateText }}</span>
+                </div>
+                <div class="tl-meta">{{ s.meta }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 需求说明 -->
+  <button class="spec-btn" @click="showSpec=!showSpec">需求说明<span class="dot"></span></button>
+  <div class="spec-panel" v-if="showSpec">
+    <div class="sp-head"><span class="t">提现审批流 · 需求点说明</span><span class="x" @click="showSpec=false">&times;</span></div>
+    <div class="sp-body">
+      <h4>一、流程变化</h4>
+      <ol>
+        <li>原个人中心买家提现审批流程：发起人 → 中控中心 → 财务 → 经管 → 出纳执行。</li>
+        <li>本次<b class="red">仅针对「系统自动发起的中间商提现」</b>这一类型：<b>中控审核节点自动过审</b>，其余节点（财务、经管、出纳执行）保持不变。</li>
+      </ol>
+      <h4>二、自动提现失败</h4>
+      <ol>
+        <li>失败（账户 / 实名 / 银行卡 / 通道异常等）→ <b>企微提醒</b>对应服务商对应<b>区域经理</b>、客服（闫珂、潘彩欣）。如 1 个服务商关联多个区域经理，则<b class="red">全部通知</b>。</li>
+        <li>模板通知内容：
+          <div style="background:#f8f9fb;border:1px solid #e5e7eb;border-radius:6px;padding:10px 12px;margin-top:6px;font-size:12.5px;line-height:1.9;color:#334155">【自动提现失败】<br>{服务商名称}（{服务商账号}）提现失败：<br>车牌：{涉及车牌}<br>原因：{失败原因}<br>时间：{失败时间}</div></li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+const { createApp, ref, watch, nextTick, onMounted } = Vue;
+createApp({
+  setup() {
+    const showSpec = ref(true);
+    const showFlow = ref(false);
+
+    const plates = '鄂ANC884,鲁Q308H0,豫P799C1,鄂AS9A23,鄂AF285C,鄂A98J1J,鄂A678R6,鄂A85V7T,鄂A6TB95,鄂AK9J61,鄂A001LS';
+
+    const withdrawRecords = [
+      { time:'2025-10-20 10:23', type:'初始化款', plate:'鄂AA68G6', amount:'390元' },
+      { time:'2025-09-30 11:18', type:'初始化款', plate:'鄂A0Z5N2', amount:'390元' }
+    ];
+
+    const steps = [
+      { state:'done', icon:'zap',      title:'系统自动发起',  time:'2025-10-21 09:00', meta:'系统归集该中间商「已结算、可提」的初始化款，合并 11 台 × 390 元 = 4290 元，按规则自动发起。' },
+      { state:'auto', icon:'check',    title:'中控中心', auto:true, time:'2025-10-21 09:01', meta:'系统自动发起的中间商提现 —— 中控审核节点自动过审。' },
+      { state:'cur',  icon:'loader',   title:'财务审核',      stateText:'待处理', meta:'待财务复核打款信息（注意：用户名与开户名不一致，需重点核查）。' },
+      { state:'wait', icon:'loader',   title:'经管审核',      stateText:'未开始', meta:'财务通过后进入经管复核。' },
+      { state:'wait', icon:'banknote', title:'出纳执行',      stateText:'未开始', meta:'通过后打款至绑定银行卡 中国农业银行 **** 7913。' }
+    ];
+
+    watch([showSpec, showFlow], () => nextTick(() => lucide.createIcons()));
+    onMounted(() => lucide.createIcons());
+    return { showSpec, showFlow, plates, withdrawRecords, steps };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

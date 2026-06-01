@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>专用账号（中间服务商）· 移动端 · 唯普汽车</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #eceef1; }
+  [v-cloak] { display: none; }
+  .phones { display: flex; gap: 30px; justify-content: center; align-items: flex-start; flex-wrap: wrap; padding: 28px 16px 60px; transition: padding-left .25s ease; }
+  /* 需求说明面板展开时，整体右移留出面板宽度，避免遮挡（面板 left12+宽440） */
+  .phones.shifted { justify-content: flex-start; padding-left: 470px; }
+  @media (max-width: 880px) { .phones.shifted { justify-content: center; padding-left: 16px; } }
+  .phone-cap { text-align: center; font-size: 12px; color: #94a3b8; margin-bottom: 8px; }
+  .phone-shell { width: 380px; background: #f4f5f7; border-radius: 36px; box-shadow: 0 16px 50px rgba(0,0,0,.18); overflow: hidden; border: 1px solid #e2e8f0; }
+
+  .topbar { background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 8px 20px; color: #1f2937; font-size: 13px; }
+  .nav { background: #fff; padding: 8px 12px; display: flex; align-items: center; border-bottom: 1px solid #f1f5f9; }
+  .nav-title { flex: 1; text-align: center; font-size: 16px; font-weight: 600; color: #1f2937; }
+  .nav-side { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; }
+
+  .overview-wrap { padding: 14px 14px 0; }
+  .overview-card { background: linear-gradient(135deg, #8290c9 0%, #6b7bb8 50%, #5a6aa6 100%); border-radius: 14px; padding: 16px 18px 18px; color: #fff; box-shadow: 0 6px 16px rgba(90,106,166,.25); }
+  .overview-title { font-size: 13px; opacity: .9; margin-bottom: 10px; font-weight: 500; }
+  .balance-row { display: flex; align-items: flex-end; justify-content: space-between; }
+  .balance-label { font-size: 12px; opacity: .85; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+  .balance-value { font-size: 26px; font-weight: 700; line-height: 1.15; letter-spacing: -.5px; }
+  .balance-actions { display: flex; gap: 8px; padding-bottom: 4px; }
+  .balance-btn { background: rgba(255,255,255,.92); color: #5a6aa6; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+  .balance-frozen { font-size: 11px; opacity: .82; margin-top: 6px; }
+  .overview-divider { border-top: 1px dashed rgba(255,255,255,.25); margin: 14px 0; }
+  .help-mini { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.25); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; }
+
+  .rec-item.rec-hl { background: #fffbe6; }
+
+  .bank-section { padding: 12px 14px 0; }
+  .bank-card { background: #fff; border-radius: 12px; padding: 14px 16px; }
+  .bank-header { display: flex; align-items: center; justify-content: space-between; }
+  .bank-title { font-size: 14px; color: #1f2937; font-weight: 600; }
+  .bank-tip { font-size: 11px; color: #94a3b8; }
+  .bank-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+  .bank-logo { width: 36px; height: 36px; border-radius: 8px; background: #d4302c; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .bank-name { flex: 1; font-size: 14px; color: #1f2937; }
+  .bank-card-no { font-size: 14px; color: #1f2937; letter-spacing: 1px; }
+
+  /* 交易记录 */
+  .rec-filter { background: #fff; display: flex; gap: 30px; padding: 12px 16px; font-size: 13px; color: #64748b; border-bottom: 1px solid #f1f5f9; }
+  .rec-hint { text-align: center; font-size: 11px; color: #b3b8c0; padding: 10px 0; }
+  .rec-list { background: #fff; }
+  .rec-item { padding: 13px 16px; border-bottom: 1px solid #f4f5f7; }
+  .rec-r1 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .rec-type { font-size: 14px; color: #1f2937; }
+  .rec-amt { font-size: 15px; font-weight: 700; color: #1f2937; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rec-memo { font-size: 12px; color: #64748b; margin-top: 4px; line-height: 1.5; }
+  .rec-r2 { display: flex; justify-content: space-between; margin-top: 5px; font-size: 12px; color: #94a3b8; }
+
+  .mask { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; z-index: 9000; padding: 24px; }
+  .box { background: #fff; width: 340px; max-width: 100%; border-radius: 14px; padding: 22px; }
+  .box .bx-h { font-size: 16px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 8px; }
+  .box .bx-p { font-size: 13.5px; color: #475569; line-height: 1.8; margin-top: 12px; }
+  .box .bx-btn { margin-top: 18px; width: 100%; background: #d12c1f; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <div class="phones" :class="{ shifted: showSpec }">
+
+    <!-- 手机1：账户总览 -->
+    <div>
+      <div class="phone-cap">账户总览</div>
+      <div class="phone-shell">
+        <div class="topbar"><span>9:41</span><span class="flex items-center gap-1"><i data-lucide="signal" class="w-3.5 h-3.5"></i><i data-lucide="wifi" class="w-3.5 h-3.5"></i><i data-lucide="battery-full" class="w-3.5 h-3.5"></i></span></div>
+        <div class="nav"><span class="nav-side"><i data-lucide="chevron-left" class="w-6 h-6"></i></span><div class="nav-title">专用账号</div><span class="nav-side" @click="showTip=true"><i data-lucide="help-circle" class="w-5 h-5"></i></span></div>
+
+        <div class="overview-wrap">
+          <div class="overview-card">
+            <div class="overview-title">账户总览（元）</div>
+            <div class="balance-row">
+              <div>
+                <div class="balance-label">可用余额（服务费）<span class="help-mini" @click="showTip=true">?</span></div>
+                <div class="balance-value">{{ formatCN(availableBalance) }}</div>
+              </div>
+              <div class="balance-actions">
+                <button class="balance-btn" @click="showTip=true">提现</button>
+                <button class="balance-btn">充值</button>
+              </div>
+            </div>
+            <div class="balance-frozen">已冻结 {{ formatCN(frozenBalance) }}</div>
+            <div class="overview-divider"></div>
+            <div class="balance-row">
+              <div>
+                <div class="balance-label">可用保证金</div>
+                <div class="balance-value">{{ formatCN(availableDeposit) }}</div>
+              </div>
+              <div class="balance-actions">
+                <button class="balance-btn">提取</button>
+                <button class="balance-btn">充值</button>
+              </div>
+            </div>
+            <div class="balance-frozen">已冻结 {{ formatCN(frozenDeposit) }}</div>
+          </div>
+        </div>
+
+        <div class="bank-section">
+          <div class="bank-card">
+            <div class="bank-header"><span class="bank-title">绑定银行卡</span><span class="bank-tip">提现到账至此卡</span></div>
+            <div class="bank-row"><span class="bank-logo">中</span><span class="bank-name">中信银行</span><span class="bank-card-no">**** 5445</span></div>
+          </div>
+        </div>
+        <div style="height:18px"></div>
+      </div>
+    </div>
+
+    <!-- 手机2：交易记录 -->
+    <div>
+      <div class="phone-cap">交易记录（中间服务商口径）</div>
+      <div class="phone-shell">
+        <div class="topbar"><span>9:41</span><span class="flex items-center gap-1"><i data-lucide="signal" class="w-3.5 h-3.5"></i><i data-lucide="wifi" class="w-3.5 h-3.5"></i><i data-lucide="battery-full" class="w-3.5 h-3.5"></i></span></div>
+        <div class="nav"><span class="nav-side"><i data-lucide="chevron-left" class="w-6 h-6"></i></span><div class="nav-title">交易记录</div><span class="nav-side" style="font-size:13px;color:#64748b;width:auto">冻结</span></div>
+        <div class="rec-filter"><span>时间 <i data-lucide="chevron-down" class="w-3 h-3 inline"></i></span><span>类型 <i data-lucide="chevron-down" class="w-3 h-3 inline"></i></span></div>
+        <div class="rec-hint">— 仅支持查询最近一年记录 —</div>
+        <div class="rec-list">
+          <div class="rec-item" :class="{'rec-hl': r.hl}" v-for="(r,i) in records" :key="i">
+            <div class="rec-r1"><span class="rec-type">{{ r.type }}</span><span class="rec-amt">{{ r.amount }}</span></div>
+            <div class="rec-memo">{{ r.note }}</div>
+            <div class="rec-r2"><span>{{ r.time }}</span><span>已处理</span></div>
+          </div>
+        </div>
+        <div style="height:18px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 提示弹框 -->
+  <div class="mask" v-if="showTip" @click.self="showTip=false">
+    <div class="box">
+      <div class="bx-h"><i data-lucide="info" class="w-5 h-5" style="color:#d12c1f"></i>服务费由系统自动提现</div>
+      <div class="bx-p">当前账号服务费提现由系统自动发起，无需手动申请。符合提现条件后，系统将按结算规则自动处理；如发生售后退车，将优先抵扣待提现服务费。</div>
+      <button class="bx-btn" @click="showTip=false">我知道了</button>
+    </div>
+  </div>
+
+  <!-- 需求说明 -->
+  <button class="spec-btn" @click="showSpec=!showSpec">需求说明<span class="dot"></span></button>
+  <div class="spec-panel" v-if="showSpec">
+    <div class="sp-head"><span class="t">专用账号（中间服务商）· 需求点说明</span><span class="x" @click="showSpec=false">&times;</span></div>
+    <div class="sp-body">
+      <div style="color:#ef4444;font-weight:600;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 11px;margin-bottom:12px;font-size:13px;line-height:1.6">※ 仅针对于中间商的账户提现的说明</div>
+      <h4>一、提现入口控制</h4>
+      <ol><li>点击<b class="red">可用余额「提现」</b>仅弹出自动提现提示，<b class="red">不进入提现申请流程</b>，禁止中间服务商自助提现。</li><li>提现入口保留可点击，避免用户误以为入口异常。</li><li>仅限制<b class="red">可用余额提现</b>，不涉及保证金提取 / 充值入口，保证金照常操作。</li></ol>
+      <h4>二、系统自动提现</h4>
+      <ol><li>满足「已清算 + 已提车」或「已清算 + 已回收资料且无待审售后」即纳入可提现。</li><li>单结即时发起、月结次月 10 日统一发起。</li><li>备注自动带车牌，≤ 10 台合并一笔，超出拆分多笔。</li></ol>
+      <h4>三、售后退车抵扣</h4>
+      <ol><li>退车服务费优先抵扣同服务商其他<b>待提现</b>服务费，按成交时间<b>从早到晚</b>。</li><li>不足则记「待抵扣」，后续新服务费继续抵扣。</li></ol>
+      <h4>四、交易记录 / 提现记录</h4>
+      <ol><li>展示提现时间 / 类型(其他) / 金额 / 状态 / 确认日期 / 车牌备注。<b class="red">类型目前从 BMS 后台看到操作类型是「其他」，需技术确认一下客户端发起提现的类型是什么？</b></li><li>备注带车牌；多车合并提现展示对应车牌。</li></ol>
+      <h4>五、冻结金额</h4>
+      <ol><li>「已冻结」由人工触发，<b class="red">不参与自动提现</b>。</li></ol>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+const { createApp, ref, watch, nextTick, onMounted } = Vue;
+createApp({
+  setup() {
+    const availableBalance = ref(12500.00);
+    const frozenBalance = ref(500.00);
+    const availableDeposit = ref(71500.00);
+    const frozenDeposit = ref(172500.00);
+    const showTip = ref(false);
+    const showSpec = ref(true);
+
+    const records = [
+      { time:'2026-05-20 14:30', type:'提现',     amount:'-5,000', note:'提现：粤A09CM5 粤B12345 粤A51WM2 …等 10 台', hl:true },
+      { time:'2026-05-19 11:20', type:'其他',     amount:'-1,000', note:'订单售后款项: 粤A0LK94 粤AY88B4 抵扣 粤D88888(退车)', hl:true },
+      { time:'2026-05-18 09:15', type:'收车款',   amount:'+500',   note:'服务费用：粤C88888' },
+      { time:'2026-05-15 16:40', type:'其他',     amount:'-500',   note:'订单售后款项: 粤A66HU9 抵扣 粤D66666(退车)', hl:true },
+      { time:'2026-02-05 16:59', type:'钱包转账', amount:'+600',   note:'初始化：粤A6125V' },
+      { time:'2026-02-05 15:21', type:'收车款',   amount:'+500',   note:'服务费用：粤AY88B4' },
+      { time:'2026-01-29 15:28', type:'收车款',   amount:'+1,100', note:'服务费用：粤A0LK94' }
+    ];
+
+    function formatCN(n){ return Number(n).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+    watch([showTip, showSpec], () => nextTick(() => lucide.createIcons()));
+    onMounted(() => lucide.createIcons());
+    return { availableBalance, frozenBalance, availableDeposit, frozenDeposit, showTip, showSpec, records, formatCN };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

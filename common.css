@@ -1,0 +1,53 @@
+/* 唯普汽车 · 公共样式（取自 vp2026-members，用于中间服务商提现原型） */
+:root {
+  --pc-red: #d12c1f;
+  --pc-red-dark: #b1281d;
+  --pc-red-light: #fff4f3;
+  --pc-orange: #f59e0b;
+  --pc-text: #1f2937;
+  --pc-muted: #64748b;
+  --pc-border: #e2e8f0;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; color: var(--pc-text); background: #f5f6f8; }
+[v-cloak] { display: none; }
+a { color: inherit; text-decoration: none; }
+
+/* 顶栏（深色 announcement bar） */
+.pc-topbar { background: #1f1f1f; color: #cbd5e1; font-size: 12px; }
+.pc-topbar .topbar-inner { max-width: 1200px; margin: 0 auto; padding: 9px 20px; display: flex; justify-content: space-between; align-items: center; }
+.pc-topbar a { color: #cbd5e1; }
+.pc-topbar a:hover { color: #fff; }
+.pc-topbar .danger { color: #f87171; }
+.pc-topbar .sep { margin: 0 6px; color: #475569; }
+
+/* 主导航 */
+.pc-nav { background: #fff; border-bottom: 1px solid var(--pc-border); }
+.pc-nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 32px; }
+.pc-nav .brand { padding: 14px 0; }
+.pc-nav .brand-zh { font-size: 32px; font-weight: 700; color: var(--pc-red); letter-spacing: 1px; line-height: 1; font-family: "STKaiti","KaiTi","STSong",serif; }
+.pc-nav .brand-en { font-size: 11px; color: #94a3b8; letter-spacing: 2px; margin-top: 4px; }
+.pc-nav .nav-list { display: flex; flex: 1; gap: 4px; }
+.pc-nav .nav-item { padding: 28px 18px; font-size: 16px; color: #334155; cursor: pointer; position: relative; white-space: nowrap; }
+.pc-nav .nav-item:hover { color: var(--pc-red); }
+.pc-nav .nav-item.active { color: var(--pc-red); font-weight: 500; }
+.pc-nav .nav-item.active::after { content: ''; position: absolute; left: 18px; right: 18px; bottom: 0; height: 3px; background: var(--pc-red); border-radius: 2px; }
+
+/* 容器 */
+.pc-main { max-width: 1200px; margin: 0 auto; padding: 14px 20px 60px; }
+
+/* 页脚 */
+.pc-footer { background: #1f1f1f; color: #94a3b8; font-size: 12.5px; margin-top: 40px; }
+.pc-footer .copyright { text-align: center; padding: 18px 20px; font-size: 12px; }
+
+/* 需求点说明浮动按钮 + 面板（评审专用，照 vp2026-members） */
+.spec-btn { position: fixed; left: 12px; top: 56px; background: #7c3aed; color: #fff; border: none; padding: 8px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; z-index: 200; box-shadow: 0 3px 12px rgba(124,58,237,.45); display: flex; align-items: center; gap: 6px; }
+.spec-btn .dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.spec-panel { position: fixed; left: 12px; top: 110px; z-index: 200; width: min(440px, calc(100vw - 24px)); max-height: calc(100vh - 130px); background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.18); overflow: hidden; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+.spec-panel .sp-head { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.spec-panel .sp-head .t { font-size: 13px; font-weight: 600; color: #7c3aed; }
+.spec-panel .sp-head .x { cursor: pointer; color: #94a3b8; font-size: 18px; line-height: 1; }
+.spec-panel .sp-body { padding: 12px 16px; font-size: 14px; color: #475569; line-height: 1.85; overflow-y: auto; }
+.spec-panel .sp-body h4 { font-size: 13px; font-weight: 600; color: #7c3aed; margin: 14px 0 6px; }
+.spec-panel .sp-body h4:first-child { margin-top: 0; }
+.spec-panel .sp-body ol { margin: 0; padding-left: 18px; list-style-type: decimal; display: flex; flex-direction: column; gap: 7px; }
+.spec-panel .sp-body b.red { color: #ef4444; }
